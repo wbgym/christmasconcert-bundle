@@ -78,8 +78,8 @@
 			<div class="cell">
 					<?php $this->insert('wb_member_select', ['dataRow'=>$i, 'classes'=>$this->arrClasses, 'membersBycourse'=> $this->arrStudentMap, 'script' => $i == 9]); ?>
 					 <?php if ($i > 0): ?><span class="floatr">
-					<input type="button" value="+" class="add paddingSides0 w24px" />
-					<?php if ($i > 1): ?><input type="button" class="remove paddingSides0 w24px" value="-"/> <?php endif; ?></span><?php endif; ?>
+					<input type="button" value="+" data-row="<?= $i ?>" class="add paddingSides0 w24px" />
+					<?php if ($i > 1): ?><input type="button" data-row="<?= $i ?>" class="remove paddingSides0 w24px" value="-"/> <?php endif; ?></span><?php endif; ?>
 					<br />
 
 			</div>
@@ -157,12 +157,7 @@
 				hideJsErrors();
 				if (numMembers < MaxMembers) {
 					var i = 0;
-					for (var ele in $('.row.memberSelect')) {
-						if (i < numMembers) {
-							$(ele).show();
-						}
-						i++;
-					}
+					$($('.row.memberSelect:hidden')[0]).show();
 					numMembers++;
 				} else {
 					$('#maxMembersError').show(100);
@@ -170,19 +165,15 @@
 			});
 			$('.remove').click(function() {
 				hideJsErrors();
-				var currRow = this.parentElement.parentElement.parentElement;
+				var currRow = $('.row.memberSelect')[$(this).attr('data-row')];
 				if (numMembers > minMembers) {
 
-					console.log(currRow);
 					// if (!$(currRow).hasClass('first'))
 					$(currRow).hide(100);
 					$(currRow).find('select').val('');
+					$(currRow).find('select:not([data-class])').val('1');
 					numMembers = numMembers-1;
 				}
-			});
-			$('select.classSelect').change(function() {
-				var $currRow = $(this.parentElement.parentElement);
-				// var $this = $(this);
 			});
 	  });
   </script>

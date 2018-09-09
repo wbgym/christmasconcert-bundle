@@ -9,7 +9,8 @@
         class="memberSelect w50 <?php if (!$first)  echo 'hidden' ?>" <?= !is_null($this->dataRow )? 'data-row="'.$this->dataRow.'"' : '' ?>
         data-class="<?= $key ?>"
     >
-          <option selected value="">
+          <option <?= $this->selected[1] ?: "selected" ?>
+          </option> value="">
             --
           </option>
           <?php foreach ($course as $id => $member): ?>
