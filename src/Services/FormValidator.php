@@ -35,11 +35,13 @@ final class FormValidator extends System {
         # require nullterminators for type(cast)-checks
 
         if (!$this->isDuartionValid(Input::post('duration') ?? 0)) $arrErrors['duration'] = 'Ungültige Vorführungslänge!';
-        if ($arrErrors['memeber'] = $this->areMembersValid(Input::post('member') ?? []))
+        if (!empty($this->areMembersValid($this->getMembers()))) {
+            $arrErrors['member'] = $this->areMembersValid($this->getMembers());
             $arrErrors['membersGeneral'] = 'Ungültige Mitgliderauswahl!';
+        }
         if (!$this->isDescriptionValid(Input::post('description')) ?? '') $arrErrors['description'] = 'Beschreibung benötigt!';
 
-        $arrErrors['name'] = $this->getNameError(Input::post('name') ?? '');
+        if ($this->getNameError(Input::post('name') ?? '')) $arrErrors['name'] = $this->getNameError(Input::post('name') ?? '');
 
         return $arrErrors;
     }
@@ -81,12 +83,23 @@ final class FormValidator extends System {
 
     public function getNumMember():int
     {
-        return count(array_filter((array)Input::post('member'), function ($elem) { return $elem != '';}));
+        return count($this->getMember());
+    }
+
+    public function getMembers():array
+    {
+        $arrReturn = [];
+        foreach (Input::post('classSelect') as $key => $value) {
+            if ($value)
+                if ($member = Input::post('memberSelect')[$key][$value])
+                    $arrReturn[] = $member;
+        }
+        return $arrReturn;
     }
 
     public function fetchArray():array {
         return [
-                'member' => array_filter((array)Input::post('member'), function ($elem) { return $elem != '';}),
+                'member' => $this->getMembers(),
                 'numMembers' => $this->getNumMember(),
                 'name' => Input::post('name'),
                 'description' => Input::post('description'),

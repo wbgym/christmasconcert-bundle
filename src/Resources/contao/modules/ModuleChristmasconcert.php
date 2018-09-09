@@ -68,25 +68,26 @@ class ModuleChristmasconcert extends Module
 
         # imports:
         $this->Import('FrontendUser', 'User');
-        $this->Import('Database', 'Database');
+        $this->Import('Database');
 
         $this->validator = System::getContainer()->get('wbgym.christmasconcert.form');
 
         $this->Template->strUser = WBGym::student($this->User->id);
         $this->Template->arrStudentMap = $this->getCourseMemberMap();
-        $this->Template->arrClasses = array_filter(WBGym::courseList(), function ($elem) {
-            return $elem != '';
-        });
+        $this->Template->arrClasses = array_filter(WBGym::courseList(), function ($elem) { return $elem != ''; });
+        $this->Template->inputMembers = $this->getMembers();
 
 
         if (Input::post('SUBMIT') !== null) {
             if ($this->Template->errors = $this->validator->processForm()) {
                 $this->Template->mode = Input::post('MODE');
+                dump($this->Template->errors);
+                return;
             } else {
                 $this->Template->success = $this->saveForm();
             }
-            return;
-        } elseif ($performance = $this->getUserPerformance()) {
+        }
+        if ($performance = $this->getUserPerformance()) {
             $this->Template->mode = static::MODES['EDIT'];
             $this->Template->performance = $performance;
         } else {
@@ -101,7 +102,21 @@ class ModuleChristmasconcert extends Module
         if ($res->count() != 1) {
             return Null;
         }
-        return $res->fetchAssoc();
+        $arrPerformance = $res->fetchAssoc();
+        $arrPerformance['members'] = unserialize($arrPerformance['members']);
+        foreach ($arrPerformance['members'] as $key => $member) {
+            $arrPerformance['members'][$key] = $this->Database->prepare('SELECT id,firstname,lastname,student,course,grade FROM tl_member WHERE id=?')->limit(1)->execute($member)->fetchAssoc();
+        }
+        return $arrPerformance;
+    }
+
+    public function getMembers()
+    {
+        $arrMember = $this->validator->getMembers();
+        foreach ($arrMember as $key => $id) {
+            $arrMember[$key] = $this->Database->prepare('SELECT id,firstname,lastname,student,course,grade FROM tl_member WHERE id=?')->limit(1)->execute($id)->fetchAssoc();
+        }
+        return $arrMember;
     }
 
     public function saveForm():bool
@@ -125,8 +140,9 @@ class ModuleChristmasconcert extends Module
 				break;
                 $res = $this->Database->prepare('SELECT * FROM tl_christmasconcert WHERE leader=?')->execute($this->User->id)->fetchAssoc();
                 $oldMembers = unserialize($res['member']);
-                foreach (array_diff($oldMembers, $this->validator->getMember()) as $member) {
+                foreach (array_diff($oldMembers, $this->validator->getMembers()) as $member) {
                     if (in_array($oldMembers, $member)) {
+                        # user removed.
                         // WBGymEmail();
                     } else {
                         # user added

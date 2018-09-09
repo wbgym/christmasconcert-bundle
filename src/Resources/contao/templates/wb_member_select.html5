@@ -1,20 +1,22 @@
-<select class="classSelect <?= $this->class ?>" data-row="<?=$this->dataRow ?>" name="<?= $this->classfieldname ?? 'classSelect' ?>[]">
+<select class="classSelect <?= $this->class ?>" data-row="<?=$this->dataRow ?>" name="<?= $this->classfieldname ?? 'classSelect' ?>[<?= $this->dataRow ?>]">
     <?php foreach ($this->classes as $id => $class): ?>
-        <option value="<?= $id ?>"><?= $class ?></option>
+        <option value="<?= $id ?>" <?php if ($id == $this->selected['course']) echo "selected"; ?>>
+            <?= $class ?>
+        </option>
     <?php endforeach; ?>
 </select>
-<?php $first = true; foreach ($this->membersBycourse as $key => $course) : ?>
+<?php $visible = $this->selected['course'] ?? array_keys($this->membersBycourse)[0];
+ foreach ($this->membersBycourse as $key => $course) : ?>
     <select
-        name="<?= $this->fieldname ?? 'memberSelect' ?>[<?= $key ?>]"
-        class="memberSelect w50 <?php if (!$first)  echo 'hidden' ?>" <?= !is_null($this->dataRow )? 'data-row="'.$this->dataRow.'"' : '' ?>
+        name="<?= $this->fieldname ?? 'memberSelect' ?>[<?= $this->dataRow ?>][<?= $key ?>]"
+        class="memberSelect w50 <?php if ($visible != $key)  echo 'hidden' ?>" <?= !is_null($this->dataRow )? 'data-row="'.$this->dataRow.'"' : '' ?>
         data-class="<?= $key ?>"
     >
-          <option <?= $this->selected[1] ?: "selected" ?>
-          </option> value="">
+          <option <?= $this->selected[1] ?: "selected" ?> value="">
             --
           </option>
           <?php foreach ($course as $id => $member): ?>
-            <option value='<?= $id ?>'>
+            <option value='<?= $id ?>' <?php if ($id == $this->selected['id']) echo "selected"; ?>>
               <?= $member ?>
             </option>
           <?php endforeach; ?>

@@ -69,30 +69,38 @@
 			<?php endif; ?>
 		  </div>
 	  </div>
-	  <!-- <div class="member-selection" id="FormMemberSelection"> -->
 	  <?php for ($i = 0; $i < 10; ++$i): ?>
-		  <div class="row memberSelect <?= $i == 0 ?'first':'' ?>">
+		  <div class="row memberSelect <?= $i < $this->performance['numMembers'] ?: 'hidden'?>">
 		  	<div class="cell">
-		  		<?php if ($i ==0): ?>Mitglieder<?php endif;?>
+		  		<?php if ($i == 0): ?>Mitglieder<?php endif;?>
 		  	</div>
 			<div class="cell">
-					<?php $this->insert('wb_member_select', ['dataRow'=>$i, 'classes'=>$this->arrClasses, 'membersBycourse'=> $this->arrStudentMap, 'script' => $i == 9]); ?>
-					 <?php if ($i > 0): ?><span class="floatr">
-					<input type="button" value="+" data-row="<?= $i ?>" class="add paddingSides0 w24px" />
-					<?php if ($i > 1): ?><input type="button" data-row="<?= $i ?>" class="remove paddingSides0 w24px" value="-"/> <?php endif; ?></span><?php endif; ?>
+					<?php $this->insert('wb_member_select', [
+						'dataRow'=>$i,
+						'classes'=>$this->arrClasses,
+						'membersBycourse'=> $this->arrStudentMap,
+						'script' => $i == 9,
+						'selected' => $this->inputMembers ? $this->inputMembers[$i] :$this->performance['members'][$i]
+					]); ?>
+					<?php if ($i > 0): ?><span class="floatr">
+						<input type="button" value="+" data-row="<?= $i ?>" class="add paddingSides0 w24px" />
+						<?php if ($i > 1): ?>
+							<input type="button" data-row="<?= $i ?>" class="remove paddingSides0 w24px" value="-"/>
+						<?php endif; ?>
+						</span>
+					<?php endif; ?>
 					<br />
 
 			</div>
 		  </div>
 	  <?php endfor; ?>
-	  <!-- </div> -->
 	  <div class="row">
 	  	<div class="cell">
 	  		<!-- spacer cell -->
 	  	</div>
 		<div class="cell color-error error">
 			<span class="hidden" id="maxMembersError">Du kannst nicht mehr als 10 Mitglieder hinzufügen!</span>
-			<span class="hidden" id="minMembersError">Du brauchs midestens 2 Mitglieder!</span>
+			<span class="hidden" id="minMembersError">Du brauchs mindestens 2 Mitglieder!</span>
 		</div>
 	  </div>
 	  <div class="row">
