@@ -19,14 +19,25 @@ use Input;
 use Module;
 use BackendTemplate;
 use Contao\System;
+use WBGym\WBGymEmail;
+use WBGym\Christmasconcert\FormValidator;
 
 class ModuleChristmasconcert extends Module
 {
+    /**
+     * {@inheritdoc}
+     */
     protected $strTemplate = 'wb_christmasconcert';
 
     protected const MODES = ['EDIT' => 'EDIT', 'REGISTER' => 'REGISTER'];
+    /**
+     * form validator service
+     * @var FormValidator
+     */
     protected $validator;
-
+    /**
+     * {@inheritdoc}
+     */
     public function generate()
     {
         if (TL_MODE == 'BE') {
@@ -43,7 +54,9 @@ class ModuleChristmasconcert extends Module
 
         return parent::generate();
     }
-
+    /**
+     * {@inheritdoc}
+     */
     protected function compile()
     {
         global $objPage;
@@ -57,10 +70,14 @@ class ModuleChristmasconcert extends Module
         $this->Import('FrontendUser', 'User');
         $this->Import('Database', 'Database');
 
-        $this->validator = System::getContainer()->get('wbgym.christmasconcert.forms');
+        $this->validator = System::getContainer()->get('wbgym.christmasconcert.form');
 
         $this->Template->strUser = WBGym::student($this->User->id);
-        $this->Template->arrMember = WBGYm::studentList();
+        $this->Template->arrStudentMap = $this->getCourseMemberMap();
+        $this->Template->arrClasses = array_filter(WBGym::courseList(), function ($elem) {
+            return $elem != '';
+        });
+
 
         if (Input::post('SUBMIT') !== null) {
             if ($this->Template->errors = $this->validator->processForm()) {
@@ -78,10 +95,6 @@ class ModuleChristmasconcert extends Module
         }
     }
 
-    /**
-     * gets The performance, where the current user is registered as leader.
-     * @return array|false false if no performance is found, the found performance otherwise
-     */
     public function getUserPerformance():?array
     {
         $res = $this->Database->prepare('SELECT * FROM tl_christmasconcert WHERE leader=?')->execute($this->User->id);
@@ -114,19 +127,47 @@ class ModuleChristmasconcert extends Module
                 $oldMembers = unserialize($res['member']);
                 foreach (array_diff($oldMembers, $this->validator->getMember()) as $member) {
                     if (in_array($oldMembers, $member)) {
-                        # user was removed
+                        // WBGymEmail();
                     } else {
                         # user added
                     }
                 }
 
-				$this->Database->prepare('UPDATE tl_christmasconcert %s WHERE id=?')->set();
+				$this->Database->prepare('UPDATE tl_christmasconcert %s WHERE id=?')->set(
+
+                );
                 break;
         }
-        if (!$res) {
-            return false;
-        }
+        if (!$res) return false;
         return true;
+    }
+
+    public function getCourseMemberMap():array
+    {
+        $arrCacheCourses = [];
+        # generate Array( courseid => Array ( studentid => studentname))
+        $students = $this->Database->prepare('SELECT * FROM tl_member WHERE student = 1 AND course != 0 ORDER BY grade, formSelector, firstname, lastname')->execute()->fetchAllAssoc();
+        $courses_students = [];
+        foreach ($students as $student) {
+            if ($student['id'] == $this->User->id) {
+              continue;
+            }
+            if (!$course = $arrCacheCourses[$student['course']]) {
+                $course = $this->Database->prepare('SELECT * FROM tl_courses WHERE id=?')->limit(1)->execute($student['course'])->fetchAllAssoc()[0];
+                $arrCacheCourses[$student['course']] = $course;
+            }
+            $courseString = str_replace(' ', '/', WBGym::courseToString($course));
+
+            if ($courseString == '/') {
+                continue;
+            }
+
+            if (!isset($courses_students[$course['id']])) {
+                $courses_students[$course['id']] = [];
+            }
+            $courses_students[$course['id']][$student['id']] = $student['firstname'].' '.$student['lastname'];
+        }
+        return $courses_students;
     }
 }
 ?>

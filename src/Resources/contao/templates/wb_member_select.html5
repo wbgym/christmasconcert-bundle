@@ -1,0 +1,33 @@
+<select class="classSelect <?= $this->class ?>" data-row="<?=$this->dataRow ?>" name="<?= $this->classfieldname ?? 'classSelect' ?>[]">
+    <?php foreach ($this->classes as $id => $class): ?>
+        <option value="<?= $id ?>"><?= $class ?></option>
+    <?php endforeach; ?>
+</select>
+<?php $first = true; foreach ($this->membersBycourse as $key => $course) : ?>
+    <select
+        name="<?= $this->fieldname ?? 'memberSelect' ?>[<?= $key ?>]"
+        class="memberSelect w50 <?php if (!$first)  echo 'hidden' ?>" <?= !is_null($this->dataRow )? 'data-row="'.$this->dataRow.'"' : '' ?>
+        data-class="<?= $key ?>"
+    >
+          <option selected value="">
+            --
+          </option>
+          <?php foreach ($course as $id => $member): ?>
+            <option value='<?= $id ?>'>
+              <?= $member ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+<?php $first = false; ?>
+<?php endforeach;?>
+<? if($this->script || is_null($this->script)): ?>
+<script>
+    $(document).ready(function (){
+        $('select.classSelect').change(function () {
+            var row = $(this).attr('data-row');
+            $('[data-row="'+row+'"][data-class]').hide();
+            $('[data-row="'+row+'"][data-class="'+$(this).val()+'"]').show();
+        });
+    });
+</script>
+<?php endif; ?>
