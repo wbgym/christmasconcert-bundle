@@ -1,0 +1,200 @@
+<section id="christmasconcert" class="block <?= $this->class ?>">
+	<style media="screen">
+	.color-error {
+		color: #dd5247;
+	}
+	.font-bold {
+		font-weight: bold;
+	}
+	.font-size-default {
+		font-size: 14px;
+	}
+	.w50 {
+		width: 49.5%; /* not 50 to prevent linebreaks with two w50 elements. */
+	}
+	.w24px {
+		width: 24px;
+	}
+	.paddingSides0 {
+		padding-left: 0;
+		padding-right: 0;
+	}
+	.floatr {
+		float: right;
+	}
+	.hidden {
+		display: none;
+	}
+	</style>
+	<?php if ($this->hasRegistered): ?>
+		<div class="info text-bold">
+			Glückwunsch, du hast erfolgreich die Vorführung <?= $this->performance['name'] ?> erstellt.
+		</div>
+	<?php endif; ?>
+	<?php if (!empty($this->errors)): ?>
+	  <div class="info font-bold color-error">
+		  Ups, du hast dich wohl irgendwo vertan!
+	  </div><br />
+	<?php endif; ?>
+	<form action="" method="POST" class='formtable' onsubmit="validate()">
+      <input type="hidden" name="REQUEST_TOKEN" value="{{request_token}}" />
+	  <?php if ($this->performance !== null): ?>
+	  	<input type="hidden" name="ENTRY_ID" value="<?= $this->performance['id'] ?>"/>
+	  <?php endif; ?>
+	  <input type="hidden" name="MODE" value="<?= $this->mode ?>" />
+	  <div class="row">
+	  	<div class="cell">
+	  		Name*
+	  	</div>
+		<div class="cell">
+			<input type="text" name="name" class="font-size-default" value="<?= \Input::post('name') ?? $this->performance['name'] ?? '' ?>" required maxlength="255">
+			<?php if ($this->errors['name']): ?>
+				<br /><span class="color-error"><?= $this->errors['name'] ?></span>
+			<?php endif; ?>
+		</div>
+	  </div>
+	  <div class="row">
+	  	<div class="cell">Leiter</div>
+		<div class="cell"><?= $this->strUser ?></div>
+	  </div>
+	  <div class="row">
+		  <div class="cell">
+		  	Beschreibung*
+		  </div>
+		  <div class="cell">
+		  	<textarea name="description" rows="8" cols="80" required><?=
+                \Input::post('description') ?? $this->performance['description'] ?? ''
+            ?></textarea><?php if ($this->errors['description']): ?>
+				<br /><span class="color-error"><?= $this->errors['description'] ?></span>
+			<?php endif; ?>
+		  </div>
+	  </div>
+	  <!-- <div class="member-selection" id="FormMemberSelection"> -->
+	  <?php for ($i = 0; $i < 10; ++$i): ?>
+		  <div class="row memberSelect <?= $i == 0 ?'first':'' ?>">
+		  	<div class="cell">
+		  		<?php if ($i ==0): ?>Mitglieder<?php endif;?>
+		  	</div>
+			<div class="cell">
+
+					<select class="classSelect" name="memberclass[]">
+						<option selected value="">
+							--
+						</option>
+						<option>
+							test
+						</option>
+					</select>
+					<select class="w50" name="member[]">
+						<option <?= $this->performance['members'][$i] !== null ?: "selected" ?> value="">
+							--
+						</option>
+						<?php foreach ($this->arrMember as $key => $value): ?>
+							<option value="<?= $key ?>">
+								<?= $value ?>
+							</option>
+						<?php endforeach; ?>
+					</select> <?php if ($i > 0): ?><span class="floatr">
+					<input type="button" value="+" class="add paddingSides0 w24px" />
+					<?php if ($i > 1): ?><input type="button" class="remove paddingSides0 w24px" value="-"/> <?php endif; ?></span><?php endif; ?>
+					<br />
+
+			</div>
+		  </div>
+	  <?php endfor; ?>
+	  <!-- </div> -->
+	  <div class="row">
+	  	<div class="cell">
+	  		<!-- spacer cell -->
+	  	</div>
+		<div class="cell color-error error">
+			<span class="hidden" id="maxMembersError">Du kannst nicht mehr als 10 Mitglieder hinzufügen!</span>
+			<span class="hidden" id="minMembersError">Du brauchs midestens 2 Mitglieder!</span>
+		</div>
+	  </div>
+	  <div class="row">
+	  	<div class="cell">
+	  		Dauer*
+	  	</div>
+		<div class="cell">
+			<input type="number" name="duration"
+				value="<?= \Input::post('duration') ?? $this->performance['duration'] ?? '5' ?>"
+				min="5" max="30" required/> min.
+				<?php if ($this->errors['duration']): ?>
+					<br /><span class="color-error"><?= $this->errors['duration'] ?></span>
+				<?php endif; ?>
+		</div>
+	  </div>
+	  <div class="row">
+	  	<div class="cell">
+	  		Anmerkungen / Sonstiges
+	  	</div>
+		<div class="cell">
+			<textarea name="notes" rows="8" cols="80"><?=
+                \Input::post('notes') ?? $this->performance['notes'] ?? ''
+            ?></textarea>
+			<?php if ($this->errors['notes']): ?>
+				<br /><span class="color-error"><?= $this->errors['notes'] ?></span>
+			<?php endif; ?>
+		</div>
+	  </div>
+	  <div class="row">
+	  		<div class="cell">
+	  			<!-- spacer cell -->
+	  		</div>
+			<div class="cell">
+				<input type="submit" name="SUBMIT" value="<?= $this->mode == 'REGISTER' ? 'Anmelden' : 'Änderung Speichern' ?>" />
+			</div>
+	  </div>
+	  <label>*Pflichtfelder</label>
+  </form>
+  <script>
+		function validate() {
+			$('#minMembersError').hide(100);
+			var numMember = 0;
+			$('.memberSelect').forEach(function () {
+				if ($(this).val() && $(this).val() != '') nuMember = numMember+1;
+			});
+			if (numMember >= 2) {
+				$('#minMembersError').show(100);
+			}
+		}
+		function hideJsErrors() {
+			$('#minMembersError').hide(100);
+			$('#maxMembersError').hide(100);
+		}
+
+	  $(document).ready(function () {
+		 	const MaxMembers = 10;
+			const minMembers = 2;
+			var numMembers = <?= $this->performance['numMembers'] ?> || 10;
+
+			$('.add').click(function() {
+				hideJsErrors();
+				if (numMembers < MaxMembers) {
+					var nextElement = document.querySelectorAll('.memberSelect')[numMembers++];
+					$(nextElement).show(100);
+					numMembers = numMembers+1;
+				} else {
+					$('#maxMembersError').show(100);
+				}
+			});
+			$('.remove').click(function() {
+				hideJsErrors();
+				var currRow = this.parentElement.parentElement.parentElement;
+				if (numMembers > minMembers) {
+
+					console.log(currRow);
+					// if (!$(currRow).hasClass('first'))
+					$(currRow).hide(100);
+					$(currRow).find('select').val('');
+					numMembers = numMembers-1;
+				}
+			});
+			$('select.classSelect').change(function() {
+				var $currRow = $(this.parentElement.parentElement);
+				// var $this = $(this);
+			});
+	  });
+  </script>
+</section>

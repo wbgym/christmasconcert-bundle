@@ -1,0 +1,3 @@
+services:
+    wbgym.christmasconcert.form:
+      class:                     Wbgym\ChristmasconcertBundle\Services\FormValidator

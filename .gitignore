@@ -1,0 +1,5 @@
+# Composer
+/vendor/
+composer.lock
+playground.php
+.DS_Store
