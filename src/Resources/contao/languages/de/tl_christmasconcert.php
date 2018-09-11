@@ -34,4 +34,5 @@ $GLOBALS['TL_LANG']['tl_christmasconcert']['show']          = ['Anzeigen', 'zieg
 $GLOBALS['TL_LANG']['tl_christmasconcert']['onlyStudents']      = 'Nur Schüler können teilnehmen!';
 $GLOBALS['TL_LANG']['tl_christmasconcert']['serializeError']    = 'Mitgliederliste kann nicht geladen werden!';
 $GLOBALS['TL_LANG']['tl_christmasconcert']['invalidUsername']   = 'Username ungültig!';
+$GLOBALS['TL_LANG']['tl_christmasconcert']['toFewMembers']   = 'Zu wenige Mitglieder!';
  ?>

@@ -10,8 +10,7 @@
     <select
         name="<?= $this->fieldname ?? 'memberSelect' ?>[<?= $this->dataRow ?>][<?= $key ?>]"
         class="memberSelect w50 <?php if ($visible != $key)  echo 'hidden' ?>" <?= !is_null($this->dataRow )? 'data-row="'.$this->dataRow.'"' : '' ?>
-        data-class="<?= $key ?>"
-    >
+        data-class="<?= $key ?>" >
           <option <?= $this->selected[1] ?: "selected" ?> value="">
             --
           </option>
@@ -23,7 +22,7 @@
         </select>
 <?php $first = false; ?>
 <?php endforeach;?>
-<? if($this->script || is_null($this->script)): ?>
+<?php if($this->script || is_null($this->script)): ?>
 <script>
     $(document).ready(function (){
         $('select.classSelect').change(function () {

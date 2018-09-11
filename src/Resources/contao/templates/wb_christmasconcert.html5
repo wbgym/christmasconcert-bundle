@@ -26,9 +26,13 @@
 		display: none;
 	}
 	</style>
-	<?php if ($this->hasRegistered): ?>
-		<div class="info text-bold">
-			Glückwunsch, du hast erfolgreich die Vorführung <?= $this->performance['name'] ?> erstellt.
+	<?php if ($this->success === true): ?>
+		<div class="info font-bold">
+			Glückwunsch, du hast erfolgreich die Vorführung "<?= $this->performance['name'] ?>" <?= $this->mode == "REGISTER" ? 'erstellt' : 'gespeichert' ?>.
+		</div>
+	<?php elseif($this->success === false): ?>
+		<div class="info font-bold ">
+			Ein Fehler ist aufgetreten, bitte versuch es erneut.
 		</div>
 	<?php endif; ?>
 	<?php if (!empty($this->errors)): ?>
@@ -36,7 +40,7 @@
 		  Ups, du hast dich wohl irgendwo vertan!
 	  </div><br />
 	<?php endif; ?>
-	<form action="" method="POST" class='formtable' onsubmit="validate()">
+	<form action="" method="POST" class='formtable'>
       <input type="hidden" name="REQUEST_TOKEN" value="{{request_token}}" />
 	  <?php if ($this->performance !== null): ?>
 	  	<input type="hidden" name="ENTRY_ID" value="<?= $this->performance['id'] ?>"/>
@@ -70,7 +74,7 @@
 		  </div>
 	  </div>
 	  <?php for ($i = 0; $i < 10; ++$i): ?>
-		  <div class="row memberSelect <?= $i < $this->performance['numMembers'] ?: 'hidden'?>">
+		  <div class="row memberSelect <?php if ($i >= 2 && is_null($this->inputMembers[i] ?? $this->performance['members'][$i])) echo "hidden";?>">
 		  	<div class="cell">
 		  		<?php if ($i == 0): ?>Mitglieder<?php endif;?>
 		  	</div>
@@ -99,8 +103,9 @@
 	  		<!-- spacer cell -->
 	  	</div>
 		<div class="cell color-error error">
-			<span class="hidden" id="maxMembersError">Du kannst nicht mehr als 10 Mitglieder hinzufügen!</span>
-			<span class="hidden" id="minMembersError">Du brauchs mindestens 2 Mitglieder!</span>
+			<span <?php if (!$this->errors['membersCountMax']): ?>class="hidden" <? endif; ?> id="maxMembersError">Du kannst nicht mehr als 10 Mitglieder hinzufügen!</span>
+			<span <?php if (!$this->errors['membersCountMin']): ?>class="hidden" <? endif; ?> id="minMembersError">Du brauchs mindestens 2 Mitglieder!</span>
+			<span <?php if (!$this->errors['membersNotUnique']): ?>class="hidden" <? endif; ?> id="membersNotUniqueError">Kein Mitglied kann mehrmals gleichzeitig auftreten!</span>
 		</div>
 	  </div>
 	  <div class="row">
@@ -140,17 +145,6 @@
 	  <label>*Pflichtfelder</label>
   </form>
   <script>
-		function validate() {
-			$('#minMembersError').hide(100);
-			var numMember = 0;
-			$('.memberSelect').each(function () {
-				if ($(this).val() && $(this).val() != '') numMember = numMember+1;
-			});
-			if (numMember >= 2) {
-				$('#minMembersError').show(100);
-				return false;
-			}
-		}
 		function hideJsErrors() {
 			$('#minMembersError').hide(100);
 			$('#maxMembersError').hide(100);
@@ -159,12 +153,11 @@
 	  $(document).ready(function () {
 		 	const MaxMembers = 10;
 			const minMembers = 2;
-			var numMembers = <?= $this->performance['numMembers'] ?? 10 ?> || minMembers;
+			var numMembers = <?= $this->performance['numMembers']  ?? 'minMembers' ?>;
 
 			$('.add').click(function() {
 				hideJsErrors();
 				if (numMembers < MaxMembers) {
-					var i = 0;
 					$($('.row.memberSelect:hidden')[0]).show();
 					numMembers++;
 				} else {
@@ -175,14 +168,14 @@
 				hideJsErrors();
 				var currRow = $('.row.memberSelect')[$(this).attr('data-row')];
 				if (numMembers > minMembers) {
-
-					// if (!$(currRow).hasClass('first'))
 					$(currRow).hide(100);
 					$(currRow).find('select').val('');
 					$(currRow).find('select:not([data-class])').val('1');
 					numMembers = numMembers-1;
 				}
 			});
+			$('.hidden').hide();
 	  });
+
   </script>
 </section>

@@ -28,6 +28,7 @@ class ModuleChristmasconcert extends Module
      * {@inheritdoc}
      */
     protected $strTemplate = 'wb_christmasconcert';
+    protected static $arrUserPerformance;
 
     protected const MODES = ['EDIT' => 'EDIT', 'REGISTER' => 'REGISTER'];
     /**
@@ -81,7 +82,6 @@ class ModuleChristmasconcert extends Module
         if (Input::post('SUBMIT') !== null) {
             if ($this->Template->errors = $this->validator->processForm()) {
                 $this->Template->mode = Input::post('MODE');
-                dump($this->Template->errors);
                 return;
             } else {
                 $this->Template->success = $this->saveForm();
@@ -98,16 +98,20 @@ class ModuleChristmasconcert extends Module
 
     public function getUserPerformance():?array
     {
-        $res = $this->Database->prepare('SELECT * FROM tl_christmasconcert WHERE leader=?')->execute($this->User->id);
-        if ($res->count() != 1) {
-            return Null;
+        if (is_null(static::$arrUserPerformance))
+        {
+            $res = $this->Database->prepare('SELECT * FROM tl_christmasconcert WHERE leader=?')->execute($this->User->id);
+            if ($res->count() != 1) {
+                return Null;
+            }
+            $arrPerformance = $res->fetchAssoc();
+            $arrPerformance['members'] = unserialize($arrPerformance['members']);
+            foreach ($arrPerformance['members'] as $key => $member) {
+                $arrPerformance['members'][$key] = $this->Database->prepare('SELECT id,firstname,lastname,student,course,grade FROM tl_member WHERE id=?')->limit(1)->execute($member)->fetchAssoc();
+            }
+            static::$arrUserPerformance = $arrPerformance;
         }
-        $arrPerformance = $res->fetchAssoc();
-        $arrPerformance['members'] = unserialize($arrPerformance['members']);
-        foreach ($arrPerformance['members'] as $key => $member) {
-            $arrPerformance['members'][$key] = $this->Database->prepare('SELECT id,firstname,lastname,student,course,grade FROM tl_member WHERE id=?')->limit(1)->execute($member)->fetchAssoc();
-        }
-        return $arrPerformance;
+        return static::$arrUserPerformance;
     }
 
     public function getMembers()
@@ -125,33 +129,51 @@ class ModuleChristmasconcert extends Module
         $removedUsers = [];
         $res = Null;
 
+        dump(\System::getContainer()->getParameter('kernel.project_dir'));
+
         switch (Input::post('MODE')) {
             case static::MODES['REGISTER']:
                 # insert new into db, send mails
+				$res = $this->Database->prepare('INSERT INTO tl_christmasconcert %s')->set(\array_merge($this->validator->fetchArray(), [
+                    'tstamp' => time(),
+                    'id' => '',
+                    'confirmed' => 0
+                ]))->execute();
                 break;
-				$this->Database->prepare('INSERT INTO tl_christmasconcert %s')->set(
-
-				);
-
+                    # send mails
                 break;
 
             case static::MODES['EDIT']:
                 # update existing dataset, compare users, send mails.
-				break;
                 $res = $this->Database->prepare('SELECT * FROM tl_christmasconcert WHERE leader=?')->execute($this->User->id)->fetchAssoc();
-                $oldMembers = unserialize($res['member']);
-                foreach (array_diff($oldMembers, $this->validator->getMembers()) as $member) {
-                    if (in_array($oldMembers, $member)) {
-                        # user removed.
-                        // WBGymEmail();
-                    } else {
-                        # user added
+                $oldMembers = unserialize($res['members']);
+                $newMembers = $this->validator->getMembers();
+                $newContent = \array_merge($this->getUserPerformance(), $this->validator->fetchArray());
+                foreach ($oldMembers as $member) {
+                    if (!in_array($member, $newMembers)) {
+                        # user removed
+                        $user = $this->getUser($member);
+                        WBGymEmail::create(\file_get_contents('bundles/christmasconcert-bundle/src/Resources/contao/templates_email/wb_christmasconcert_removed.html', true), 'WBGym Anmeldung Weihnachtskonzert')
+                            ->contentReplaceTags([
+                                'recipient_firstname' => $user['firstname'],
+                                'presentation_name' => $newContent['name']
+                            ])->sendTo($user['emial']);
                     }
                 }
-
-				$this->Database->prepare('UPDATE tl_christmasconcert %s WHERE id=?')->set(
-
-                );
+                foreach ($newMembers as $member) {
+                    if (!in_array($member, $oldMembers)) {
+                        # user added
+                        $user = $this->getUser($member);
+                        WBGymEmail::create(\file_get_contents('bundles/christmasconcert-bundle/src/Resources/contao/templates_email/wb_christmasconcert_added.html', true), 'WBGym Anmeldung Weihnachtskonzert')
+                            ->contentReplaceTags([
+                                'recipient_firstname' => $user['firstname'],
+                                'presentation_name' => $newContent['name'],
+                                'owner_name' => WBGYm::student($this->User->id)
+                            ])->sendTo($user['email']);
+                    }
+                }
+				$res = $this->Database->prepare('UPDATE tl_christmasconcert %s WHERE id=?')
+                    ->set($newContent)->execute($this->getUserPerformance()['id']);
                 break;
         }
         if (!$res) return false;
@@ -184,6 +206,11 @@ class ModuleChristmasconcert extends Module
             $courses_students[$course['id']][$student['id']] = $student['firstname'].' '.$student['lastname'];
         }
         return $courses_students;
+    }
+
+    public function getUser($uid):array
+    {
+        return $this->Database->prepare('SELECT * FROM tl_member WHERE id=?')->limit(1)->execute($uid)->fetchAssoc();
     }
 }
 ?>

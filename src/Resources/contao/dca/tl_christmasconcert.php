@@ -190,6 +190,8 @@ class tl_christmasconcert extends Backend
 	public function saveSerialized(string $value, DataContainer $dc)
 	{
 		$arrData = $value? \explode(',', $value) : [];
+		if (count($arrData) < 2) throw new \Exception($GLOBALS['TL_LANG']['tl_christmasconcert']['toFewMembers'], 1);
+
 		foreach ($arrData as $key => $strName) {
 			$curr = $this->Database->prepare('SELECT * FROM tl_member WHERE username=?')->execute($strName);
 			if ($curr->count() != 1) throw new \Exception($GLOBALS['TL_LANG']['tl_christmasconcert']['invalidUsername'] ?? "invalid username");
