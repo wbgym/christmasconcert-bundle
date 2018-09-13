@@ -114,7 +114,7 @@ class ModuleChristmasconcert extends Module
         return static::$arrUserPerformance;
     }
 
-    public function getMembers()
+    public function getMembers():array
     {
         $arrMember = $this->validator->getMembers();
         foreach ($arrMember as $key => $id) {
@@ -128,10 +128,10 @@ class ModuleChristmasconcert extends Module
         $newUsers = [];
         $removedUsers = [];
         $res = Null;
+        $input = $this->validator->fetchArray();
+        $mode = is_array($this->getUserPerformance()) ? static::MODES['EDIT'] : Input::post('MODE');
 
-        dump(\System::getContainer()->getParameter('kernel.project_dir'));
-
-        switch (Input::post('MODE')) {
+        switch ($mode) {
             case static::MODES['REGISTER']:
                 # insert new into db, send mails
 				$res = $this->Database->prepare('INSERT INTO tl_christmasconcert %s')->set(\array_merge($this->validator->fetchArray(), [
@@ -139,8 +139,16 @@ class ModuleChristmasconcert extends Module
                     'id' => '',
                     'confirmed' => 0
                 ]))->execute();
-                break;
                     # send mails
+                foreach ($this->validator->getMembers() as $member) {
+                    $user = $this->getUser($member);
+                    WBGymEmail::fromTemplate('vendor/wbgym//christmasconcert-bundle/src/Resources/contao/templates_email/wb_christmasconcert_removed.html', 'WBGym Anmeldung Weihnachtskonzert')
+                        ->contentReplaceTags([
+                            'recipient_firstname' => $user['firstname'],
+                            'owner_name' => WBGym::student($this->User->id),
+                            'presentation_name' => $input['name']
+                        ])->sendTo($user['email']);
+                }
                 break;
 
             case static::MODES['EDIT']:
@@ -148,27 +156,27 @@ class ModuleChristmasconcert extends Module
                 $res = $this->Database->prepare('SELECT * FROM tl_christmasconcert WHERE leader=?')->execute($this->User->id)->fetchAssoc();
                 $oldMembers = unserialize($res['members']);
                 $newMembers = $this->validator->getMembers();
-                $newContent = \array_merge($this->getUserPerformance(), $this->validator->fetchArray());
+                $newContent = \array_merge($this->getUserPerformance(), $input);
                 foreach ($oldMembers as $member) {
                     if (!in_array($member, $newMembers)) {
                         # user removed
                         $user = $this->getUser($member);
-                        WBGymEmail::create(\file_get_contents('bundles/christmasconcert-bundle/src/Resources/contao/templates_email/wb_christmasconcert_removed.html', true), 'WBGym Anmeldung Weihnachtskonzert')
+                        WBGymEmail::fromTemplate('vendor/wbgym/christmasconcert-bundle/src/Resources/contao/templates_email/wb_christmasconcert_removed.html', 'WBGym Anmeldung Weihnachtskonzert')
                             ->contentReplaceTags([
                                 'recipient_firstname' => $user['firstname'],
                                 'presentation_name' => $newContent['name']
-                            ])->sendTo($user['emial']);
+                            ])->sendTo($user['email']);
                     }
                 }
                 foreach ($newMembers as $member) {
                     if (!in_array($member, $oldMembers)) {
                         # user added
                         $user = $this->getUser($member);
-                        WBGymEmail::create(\file_get_contents('bundles/christmasconcert-bundle/src/Resources/contao/templates_email/wb_christmasconcert_added.html', true), 'WBGym Anmeldung Weihnachtskonzert')
+                        WBGymEmail::fromTemplate('vendor/wbgym/christmasconcert-bundle/src/Resources/contao/templates_email/wb_christmasconcert_added.html', 'WBGym Anmeldung Weihnachtskonzert')
                             ->contentReplaceTags([
                                 'recipient_firstname' => $user['firstname'],
                                 'presentation_name' => $newContent['name'],
-                                'owner_name' => WBGYm::student($this->User->id)
+                                'owner_name' => WBGym::student($this->User->id)
                             ])->sendTo($user['email']);
                     }
                 }

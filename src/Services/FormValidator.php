@@ -65,7 +65,7 @@ final class FormValidator extends System {
     {
         $arrMembersErrors = [];
         foreach ($members as $key => $member) {
-            if ($member == '') { unset($members[$key]); continue; }
+            if (trim($member) == '') { unset($members[$key]); continue; }
             if (!$this->isMemberValid($member ? $member : 0)) $arrMembersErrors[$key] = 'Ungültiges Mitglied!';
         }
         return $arrMembersErrors;
@@ -73,14 +73,14 @@ final class FormValidator extends System {
 
     private function getNameError(string $name):?string
     {
-        $maxLength = 256;
+        $maxLength = 256; $name = trim($name);
         if (strlen($name) >= $maxLength) return 'Name zu lang!';
         elseif (strlen($name) == 0) return 'Name zu kurz!';
         return Null;
     }
     private function isDescriptionValid(string $description):bool
     {
-        if (strlen($description) > 0) return true;
+        if (strlen(trim($description)) > 0) return true;
         return false;
     }
 
@@ -93,7 +93,7 @@ final class FormValidator extends System {
     {
         $arrReturn = [];
         foreach (Input::post('classSelect') as $key => $value) {
-            if ($value)
+            if (trim($value))
                 if ($member = Input::post('memberSelect')[$key][$value])
                     $arrReturn[] = $member;
         }
@@ -104,9 +104,9 @@ final class FormValidator extends System {
         return [
                 'members' => serialize($this->getMembers()),
                 'numMembers' => $this->getNumMembers(),
-                'name' => Input::post('name'),
-                'description' => Input::post('description'),
-                'duration' => Input::post('duration'),
+                'name' => trim(Input::post('name')),
+                'description' => trim(Input::post('description')),
+                'duration' => trim(Input::post('duration')),
                 'leader' => $this->User->id,
         ];
     }

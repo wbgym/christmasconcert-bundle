@@ -1,31 +1,4 @@
 <section id="christmasconcert" class="block <?= $this->class ?>">
-	<style media="screen">
-	.color-error {
-		color: #dd5247;
-	}
-	.font-bold {
-		font-weight: bold;
-	}
-	.font-size-default {
-		font-size: 14px;
-	}
-	.w50 {
-		width: 49.5%; /* not exactely 50 to prevent linebreaks with two w50 elements. */
-	}
-	.w24px {
-		width: 24px;
-	}
-	.paddingSides0 {
-		padding-left: 0;
-		padding-right: 0;
-	}
-	.floatr {
-		float: right;
-	}
-	.hidden {
-		display: none;
-	}
-	</style>
 	<?php if ($this->success === true): ?>
 		<div class="info font-bold">
 			Glückwunsch, du hast erfolgreich die Vorführung "<?= $this->performance['name'] ?>" <?= $this->mode == "REGISTER" ? 'erstellt' : 'gespeichert' ?>.
@@ -51,7 +24,7 @@
 	  		Name*
 	  	</div>
 		<div class="cell">
-			<input type="text" name="name" class="font-size-default" value="<?= \Input::post('name') ?? $this->performance['name'] ?? '' ?>" required maxlength="255">
+			<input type="text" name="name" placeholder="Wir heißen..." class="font-size-default" value="<?= \Input::post('name') ?? $this->performance['name'] ?? '' ?>" required maxlength="255">
 			<?php if ($this->errors['name']): ?>
 				<br /><span class="color-error"><?= $this->errors['name'] ?></span>
 			<?php endif; ?>
@@ -66,7 +39,7 @@
 		  	Beschreibung*
 		  </div>
 		  <div class="cell">
-		  	<textarea name="description" rows="8" cols="80" required><?=
+		  	<textarea name="description" rows="8" cols="80" placeholder="wir werden das und das tun..." required><?=
                 \Input::post('description') ?? $this->performance['description'] ?? ''
             ?></textarea><?php if ($this->errors['description']): ?>
 				<br /><span class="color-error"><?= $this->errors['description'] ?></span>
@@ -126,7 +99,7 @@
 	  		Anmerkungen / Sonstiges
 	  	</div>
 		<div class="cell">
-			<textarea name="notes" rows="8" cols="80"><?=
+			<textarea name="notes" rows="8" cols="80" placeholder="keine weiteren Anmerkungen."><?=
                 \Input::post('notes') ?? $this->performance['notes'] ?? ''
             ?></textarea>
 			<?php if ($this->errors['notes']): ?>
