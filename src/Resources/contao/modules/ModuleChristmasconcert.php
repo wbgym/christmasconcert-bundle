@@ -142,7 +142,7 @@ class ModuleChristmasconcert extends Module
                     # send mails
                 foreach ($this->validator->getMembers() as $member) {
                     $user = $this->getUser($member);
-                    WBGymEmail::fromTemplate('vendor/wbgym//christmasconcert-bundle/src/Resources/contao/templates_email/wb_christmasconcert_removed.html', 'WBGym Anmeldung Weihnachtskonzert')
+                    WBGymEmail::fromTemplate('vendor/wbgym//christmasconcert-bundle/src/Resources/contao/templates_email/wb_christmasconcert_added.html', 'WBGym Anmeldung Weihnachtskonzert')
                         ->contentReplaceTags([
                             'recipient_firstname' => $user['firstname'],
                             'owner_name' => WBGym::student($this->User->id),
